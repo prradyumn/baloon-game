@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>Sky Balloon — An Integer Voyage</title>
+  <link rel="icon" href="assets/ui/logo/app-icon.jpg">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-screen="title">
+  <div id="viewport">
+    <div id="stage" class="land">
+      <canvas id="world"></canvas>
+      <!-- the sea surface: live SVG waves + CSS light rays, laid over the canvas (driven by SB.world.drawSea) -->
+      <div id="sea" aria-hidden="true">
+        <div id="sea-rays">
+          <i style="--x: 6%;  --w: 90px;  --r: 14deg; --d: 7s"></i>
+          <i style="--x: 21%; --w: 150px; --r: 18deg; --d: 9s"></i>
+          <i style="--x: 38%; --w: 70px;  --r: 12deg; --d: 6s"></i>
+          <i style="--x: 52%; --w: 130px; --r: 20deg; --d: 11s"></i>
+          <i style="--x: 69%; --w: 85px;  --r: 15deg; --d: 8s"></i>
+          <i style="--x: 84%; --w: 120px; --r: 19deg; --d: 10s"></i>
+        </div>
+        <svg id="sea-svg">
+          <defs>
+            <linearGradient id="sea-body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#c8f6fb" stop-opacity=".62"/>
+              <stop offset=".1" stop-color="#5fd0ea" stop-opacity=".42"/>
+              <stop offset=".55" stop-color="#1f8fc4" stop-opacity=".14"/>
+              <stop offset="1" stop-color="#0d5d99" stop-opacity="0"/>
+            </linearGradient>
+            <!-- back waves only tint a thin band at the crest (svg y 70 = sea level) -->
+            <linearGradient id="sea-backfill" gradientUnits="userSpaceOnUse" x1="0" y1="50" x2="0" y2="110">
+              <stop offset="0" stop-color="#e3fcfe" stop-opacity=".5"/><stop offset="1" stop-color="#e3fcfe" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="sea-midfill" gradientUnits="userSpaceOnUse" x1="0" y1="56" x2="0" y2="130">
+              <stop offset="0" stop-color="#a6eaf5" stop-opacity=".45"/><stop offset="1" stop-color="#a6eaf5" stop-opacity="0"/>
+            </linearGradient>
+            <filter id="sea-soft" x="-5%" y="-50%" width="110%" height="200%"><feGaussianBlur stdDeviation="2.4"/></filter>
+          </defs>
+          <path id="sea-back" fill="url(#sea-backfill)"/>
+          <path id="sea-mid" fill="url(#sea-midfill)"/>
+          <path id="sea-front" fill="url(#sea-body)"/>
+          <path id="sea-ripple1" class="sea-line" stroke-opacity=".22" stroke-width="2"/>
+          <path id="sea-ripple2" class="sea-line" stroke-opacity=".12" stroke-width="2"/>
+          <path id="sea-glow" class="sea-line" stroke-opacity=".35" stroke-width="9" filter="url(#sea-soft)"/>
+          <path id="sea-crest" class="sea-line" stroke-opacity=".95" stroke-width="2.6"/>
+          <path id="sea-foam" class="sea-line" stroke-opacity=".9" stroke-width="3.2" stroke-dasharray="2 27 9 46 3 71 14 38 5 93"/>
+          <g id="sea-glints"></g>
+        </svg>
+      </div>
+
+      <!-- ================= COCKPIT HUD (minimal) ================= -->
+      <section id="hud">
+        <div id="topbar" class="abs">
+          <button class="round-btn" id="btn-hint" aria-label="Hint"><img src="assets/ui/cockpit-hud/hint-bulb.png" alt=""></button>
+          <button class="round-btn" id="btn-pause" aria-label="Pause"><svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1.5"/><rect x="14" y="5" width="4" height="14" rx="1.5"/></svg></button>
+        </div>
+
+        <div id="altimeter" class="abs">
+          <div id="alt-ticks"></div>
+          <div id="alt-gap"></div>
+          <div id="alt-target"><span id="alt-target-val"></span></div>
+          <img id="alt-ship" src="assets/ui/icons/icon-balloon.png" alt="">
+        </div>
+
+        <div id="nav" class="abs">
+          <div id="nav-bubble"><div id="nav-text"></div></div>
+          <img id="nav-img" src="assets/characters/navigator-poses/nav-point.png" alt="Navigator">
+        </div>
+
+        <div id="eqbar" class="abs">
+          <div class="eq-pill">
+            <div id="eq-line"></div>
+          </div>
+        </div>
+
+        <button id="pairbtn" class="abs pill-btn gold">
+          <img src="assets/ui/icons/icon-zero-pair.png" alt=""><span>Add zero pair<small>(+1) + (−1) = 0</small></span>
+        </button>
+
+        <div id="dock" class="abs">
+          <div class="pod" id="pod-b">
+            <div class="pod-btns">
+              <button id="btn-add-b" class="op-btn add-b"><img src="assets/ui/cockpit-hud/quick-plus.png" alt=""><i>+</i><img class="tok" src="assets/tokens/balloons/balloon-idle.png" alt="balloon"><b class="count" id="pod-b-count"></b><span>Add<small>+ (+1)</small></span></button>
+              <button id="btn-take-b" class="op-btn take"><img src="assets/ui/cockpit-hud/quick-cut.png" alt=""><i>−</i><img class="tok" src="assets/tokens/balloons/balloon-idle.png" alt="balloon"><span>Take away<small>− (+1)</small></span></button>
+            </div>
+          </div>
+          <div class="pod" id="pod-s">
+            <div class="pod-btns">
+              <button id="btn-add-s" class="op-btn add-s"><img src="assets/ui/cockpit-hud/quick-minus.png" alt=""><i>+</i><img class="tok" src="assets/tokens/sandbags/sandbag-idle.png" alt="sandbag"><b class="count" id="pod-s-count"></b><span>Add<small>+ (−1)</small></span></button>
+              <button id="btn-take-s" class="op-btn take"><img src="assets/ui/cockpit-hud/quick-cut.png" alt=""><i>−</i><img class="tok" src="assets/tokens/sandbags/sandbag-idle.png" alt="sandbag"><span>Take away<small>− (−1)</small></span></button>
+            </div>
+          </div>
+          <div id="plan">
+            <div class="plan-q">Movement needed<small>= Target − Start</small></div>
+            <div class="plan-row">
+              <button id="plan-dec" class="op-btn mini"><img src="assets/ui/cockpit-hud/quick-minus.png" alt=""><i>−</i></button>
+              <div id="plan-val"></div>
+              <button id="plan-inc" class="op-btn mini"><img src="assets/ui/cockpit-hud/quick-plus.png" alt=""><i>+</i></button>
+            </div>
+            <button id="plan-go" class="pill-btn green">Fly!</button>
+          </div>
+        </div>
+        <div id="toast" class="abs"></div>
+        <div id="coach" aria-live="polite">
+          <svg id="coach-hand" viewBox="0 0 24 24" aria-hidden="true"><path transform="matrix(1 0 0 -1 0 24)" d="M9 11.24V7.5C9 6.12 10.12 5 11.5 5S14 6.12 14 7.5v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.91-1.38z"/></svg>
+          <div id="coach-tip"></div>
+        </div>
+      </section>
+      <img id="drag-ghost" alt="">
+      <!-- level 1 arrival scene: letterbox bars + skip -->
+      <div class="cut-vignette"></div>
+      <div id="cut-title"><b></b><small></small></div>
+      <div class="cut-bar top"></div><div class="cut-bar bottom"></div>
+      <button id="cut-skip" class="pill-btn ghost">Skip ›</button>
+
+      <!-- ================= TITLE ================= -->
+      <section id="screen-title" class="screen open">
+        <!-- a light, quiet cover: sky, a few clouds, one soft sea line; the title is the focal point -->
+        <div id="title-sky"><i class="tc c1"></i><i class="tc c2"></i><i class="tc c3"></i></div>
+        <svg id="title-sea" viewBox="0 0 1920 260" preserveAspectRatio="none" aria-hidden="true">
+          <defs><linearGradient id="tsea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bdeef6"/><stop offset="1" stop-color="#7fd3ea"/></linearGradient></defs>
+          <path id="title-sea-back" fill="#d8f5fa" d=""/>
+          <path id="title-sea-front" fill="url(#tsea)" d=""/>
+        </svg>
+        <div class="cast" id="cast-pilot"><img src="assets/characters/pilot-poses/pilot-wave.png" alt="The pilot"></div>
+        <img id="title-logo" src="assets/ui/logo/wordmark-dark.png" alt="Sky Balloon">
+        <div id="title-tag">An integer voyage above and below the sea</div>
+        <button id="title-play" class="pill-btn big violet">Play</button>
+      </section>
+
+      <!-- ================= VOYAGE MAP ================= -->
+      <section id="screen-map" class="screen">
+        <div id="map-scroll"><div id="map-frame"><img id="map-img" src="assets/ui/world-map.jpg" alt=""><div id="map-nodes"></div></div></div>
+        <div id="map-hint">← swipe the map →</div>
+        <div id="map-title">Voyage map</div>
+        <button id="map-home" class="round-btn" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></button>
+      </section>
+
+      <!-- ================= LEVEL INTRO ================= -->
+      <section id="screen-intro" class="screen modal soft">
+        <div id="in-card" class="card">
+          <img id="in-art" alt="">
+          <div id="in-level"></div>
+          <div id="in-name"></div>
+          <div id="in-tip"></div>
+          <button id="in-go" class="pill-btn green big">Fly!</button>
+        </div>
+      </section>
+
+      <!-- ================= RESULTS ================= -->
+      <section id="screen-results" class="screen modal">
+        <div id="confetti"></div>
+        <div id="res-card" class="card">
+          <img id="res-art" src="assets/ui/screens/level-complete.png" alt="">
+          <div id="res-title"></div>
+          <div id="res-stars"></div>
+          <div id="res-moves"></div>
+          <div class="res-learn">You practised</div>
+          <div id="res-ncert"></div>
+          <div class="res-btns">
+            <button id="res-retry" class="pill-btn ghost">Retry</button>
+            <button id="res-map" class="pill-btn ghost">Map</button>
+            <button id="res-next" class="pill-btn green">Next ›</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PAUSE ================= -->
+      <section id="screen-pause" class="screen modal">
+        <div class="card pause-card">
+          <div class="pause-title">Paused</div>
+          <button id="pause-resume" class="pill-btn green">Resume</button>
+          <button id="pause-restart" class="pill-btn ghost">Restart level</button>
+          <button id="btn-sound" class="pill-btn ghost">Sound: on</button>
+          <button id="pause-map" class="pill-btn ghost">Voyage map</button>
+        </div>
+      </section>
+    </div>
+  </div>
+  <div id="loader"><img src="assets/tokens/balloons/balloon-idle.png" alt=""><div id="loader-track"><i id="loader-bar"></i></div><p>Inflating balloons…</p></div>
+
+  <script src="vendor/gsap.min.js"></script>
+  <script src="js/asset-sizes.js"></script>
+  <script src="js/sfx-data.js"></script>
+  <script src="js/voice-lines.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/hud.js"></script>
+  <script src="js/screens.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
