@@ -278,12 +278,12 @@
      so the surface never visibly repeats. Layers further back are smaller and drift slower with the camera. */
   const SEA_H = 380, SEA_TOP = 70;                 // svg height; how far above sea level the svg starts
   const LAYERS = {   // [amplitude px, wavelength px, angular speed /s, phase]
-    back:  { par: 0.55, dy: -10, amp: 1,   tOff: 0,   waves: [[3.0, 380, 0.85, 1.3], [1.7, 171, 1.5, 4.1], [0.9, 77, 2.5, 2.2]] },
-    mid:   { par: 0.8,  dy: -5,  amp: 1,   tOff: 0,   waves: [[4.4, 455, 0.95, 0.4], [2.5, 203, 1.65, 2.9], [1.2, 89, 2.8, 5.0]] },
-    front: { par: 1,    dy: 0,   amp: 1,   tOff: 0,   waves: [[6.2, 520, 1.05, 0], [3.3, 233, 1.85, 2.1], [1.7, 101, 3.0, 4.4]] }
+    back:  { par: 0.55, dy: -14, amp: 1,   tOff: 0,   waves: [[5.5, 380, 1.3, 1.3], [3.0, 171, 2.2, 4.1], [1.5, 77, 3.4, 2.2]] },
+    mid:   { par: 0.8,  dy: -7,  amp: 1,   tOff: 0,   waves: [[8.0, 455, 1.4, 0.4], [4.4, 203, 2.4, 2.9], [2.0, 89, 3.8, 5.0]] },
+    front: { par: 1,    dy: 0,   amp: 1,   tOff: 0,   waves: [[11, 520, 1.5, 0], [5.8, 233, 2.6, 2.1], [2.8, 101, 4.0, 4.4]] }
   };
-  LAYERS.r1 = { ...LAYERS.front, dy: 26, amp: 0.55, tOff: 0.9 };   // light bending just under the surface
-  LAYERS.r2 = { ...LAYERS.front, dy: 60, amp: 0.4, tOff: 2.1 };
+  LAYERS.r1 = { ...LAYERS.front, par: 0.9, dy: 30, amp: 0.6, tOff: 0.9 };   // light bending just under the surface
+  LAYERS.r2 = { ...LAYERS.front, par: 0.8, dy: 68, amp: 0.45, tOff: 2.1 };
   function wave(layer, t, step = 9) {
     const pts = [], camX = cam.x * layer.par, tt = t + layer.tOff;
     for (let x0 = -60; x0 <= W + 60; x0 += step) {
@@ -308,6 +308,7 @@
       if (!seaEls.svg) return;
       seaEls.glints.innerHTML = GLINTS.map(g => `<circle r="2.6" fill="#fff" style="animation-delay:-${g.d.toFixed(2)}s"/>`).join('');
       seaEls.gl = [...seaEls.glints.children];
+      seaEls.gl.forEach((c, i) => c.setAttribute('r', (2.6 + (i % 3) * 1.1).toFixed(1)));
     }
     if (!seaEls.svg) return;
     // the sea layer follows the same zoom as the canvas (stage zoom Z, plus any cinematic push-in on the ship)
@@ -326,8 +327,9 @@
     seaEls.front.setAttribute('d', body(front));
     const crest = line(front);
     seaEls.crest.setAttribute('d', crest); seaEls.glow.setAttribute('d', crest); seaEls.foam.setAttribute('d', crest);
-    seaEls.foam.style.strokeDashoffset = (cam.x + t * 14).toFixed(1);          // foam rides with the world and drifts a little
+    seaEls.foam.style.strokeDashoffset = (cam.x + t * 38).toFixed(1);          // foam rides with the world and drifts along the crest
     seaEls.r1.setAttribute('d', line(wave(LAYERS.r1, t, 14)));
+    seaEls.r1.style.strokeDashoffset = (cam.x * 0.9 - t * 22).toFixed(1); seaEls.r2.style.strokeDashoffset = (cam.x * 0.8 + t * 16).toFixed(1);
     seaEls.r2.setAttribute('d', line(wave(LAYERS.r2, t, 16)));
     // sparkles sit on the crest, anchored to the world (wrapping off-screen)
     GLINTS.forEach((g, i) => {

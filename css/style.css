@@ -21,14 +21,14 @@ button { font-family: inherit; color: inherit; }
 body:not([data-screen="play"]):not([data-screen="results"]) #sea { visibility: hidden; }
 #sea-svg { position: absolute; left: 0; top: 0; overflow: visible; will-change: transform; }
 #sea-svg .sea-line { fill: none; stroke: #fff; stroke-linecap: round; stroke-linejoin: round; }
-#sea-glints circle { opacity: 0; animation: seaGlint 2.4s ease-in-out infinite; }
-@keyframes seaGlint { 0%, 100% { opacity: 0; } 45% { opacity: .95; } 60% { opacity: .2; } }
+#sea-glints circle { opacity: 0; animation: seaGlint 1.8s ease-in-out infinite; filter: drop-shadow(0 0 4px #fff); }
+@keyframes seaGlint { 0%, 100% { opacity: 0; } 40% { opacity: 1; } 60% { opacity: .3; } }
 #sea-rays { position: absolute; left: 0; right: 0; top: 0; height: 820px; will-change: transform;
   -webkit-mask-image: linear-gradient(#000 0, #000 15%, transparent 100%); mask-image: linear-gradient(#000 0, #000 15%, transparent 100%); }
 #sea-rays i { position: absolute; top: -30px; left: var(--x); width: var(--w); height: 920px; transform-origin: 50% 0; transform: rotate(var(--r));
   background: linear-gradient(rgba(255, 253, 232, .42), rgba(255, 253, 232, .12) 45%, rgba(255, 253, 232, 0) 85%);
   filter: blur(12px); mix-blend-mode: screen; animation: seaRay var(--d) ease-in-out infinite alternate; }
-@keyframes seaRay { from { transform: rotate(calc(var(--r) - 3deg)); opacity: .3; } to { transform: rotate(calc(var(--r) + 3deg)); opacity: .75; } }
+@keyframes seaRay { from { transform: rotate(calc(var(--r) - 6deg)); opacity: .25; } to { transform: rotate(calc(var(--r) + 6deg)); opacity: .85; } }
 @media (prefers-reduced-motion: reduce) { #sea-rays i, #sea-glints circle { animation: none; } #sea-glints circle { opacity: .5; } }
 .abs { position: absolute; }
 b.n { font-weight: 700; white-space: nowrap; }
