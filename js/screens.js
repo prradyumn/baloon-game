@@ -6,6 +6,8 @@
   const open = (id, on) => $(id).classList.toggle('open', on);
   const LV_ART = { 1: 'how-add-balloon', 2: 'how-add-sandbag', 3: 'how-add-sandbag', 5: 'how-remove-sandbag', 6: 'how-zero-pair', 7: 'how-zero-pair', 8: 'how-zero-pair' };
 
+  const introSpeech = l => l.intro.join(' ').replace(/\(\+1\)/g, 'positive 1').replace(/\(−1\)/g, 'negative 1').replace(/\(−(\d+)\)/g, 'negative $1').replace(/\(\+(\d+)\)/g, 'positive $1');
+
   const SC = SB.screens = {
     current: 'title', paused: false,
     title() {
@@ -56,7 +58,20 @@
       ['screen-map', 'screen-results', 'screen-title'].forEach(id => open(id, false));
       SB.game.load(l);
       // level 1 opens with the airship arriving (not on a retry); the intro card follows the landing
-      if (l.id === 1 && !retry) SB.game.arrival(() => SC.introCard(l)); else SC.introCard(l);
+      if (l.id === 1 && !retry) SB.game.arrival(() => SC.handoff(l)); else SC.introCard(l);
+    },
+    /** After the arrival scene: one continuous shot into play. The HUD builds in, the guide line draws to the gate,
+        the intro is spoken (in place of the intro card), the ship sets off, then the coach hand shows the first tool. */
+    handoff(l) {
+      SB.hud.buildIn();
+      SB.world.revealGuide(0.55);
+      // the navigator reads the intro (voice only, no panel); the coach hand follows once it has been said (9 s at most)
+      setTimeout(() => {
+        let done = false; const coach = () => { if (!done) { done = true; clearTimeout(cap); setTimeout(() => SB.hud.coachNew(l), 500); } };
+        const cap = setTimeout(coach, 9000);
+        AU.say(introSpeech(l), { onEnd: coach });
+      }, 450);
+      setTimeout(() => SB.game.begin(), 1500);
     },
     introCard(l) {
       $('in-level').textContent = `Level ${l.id} · ${l.world}`;
@@ -67,7 +82,7 @@
       $('in-art').className = art ? '' : 'nav';
       open('screen-intro', true);
       gsap.fromTo('#in-card', { y: 60, opacity: 0, scale: 0.9 }, { y: 0, opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(1.8)' });
-      AU.say(l.intro.join(' ').replace(/\(\+1\)/g, 'positive 1').replace(/\(−1\)/g, 'negative 1').replace(/\(−(\d+)\)/g, 'negative $1').replace(/\(\+(\d+)\)/g, 'positive $1'));
+      AU.say(introSpeech(l));
       $('in-go').onclick = () => {
         AU.unlock(); AU.stopVoice();
         gsap.to('#in-card', { y: 40, opacity: 0, duration: 0.25, onComplete: () => open('screen-intro', false) });

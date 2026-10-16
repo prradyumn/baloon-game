@@ -19,13 +19,27 @@
   };
   const BH = A.hForW(G.balloon.key, G.balloon.w), SH = A.hForW(G.sandbag.key, G.sandbag.w);
   const GH = A.hForW(G.body.key, G.body.w);
-  W_.ship = { rimY: (G.body.rim - G.body.cy) * GH, bottomY: (G.body.bottom - G.body.cy) * GH, BH, SH, GH };
+  W_.ship = { rimY: (G.body.rim - G.body.cy) * GH, bottomY: (G.body.bottom - G.body.cy) * GH, BH, SH, GH,
+    rings: [-66, -47, -28, -9, 9, 28, 47, 66], ringY: 16 };   // hook-rail ring centres (x) and ring bottom (below bottomY), measured from the 150px rail
 
   let cv, ctx, pr = 1, W = 1920, H = 1080, Z = 1;
   /* Zoom out: the world is drawn on a larger logical canvas (stage ÷ ZOOM) that is shown at stage size,
      so everything in the scene appears ZOOM× as big and the camera sees more around the ship. */
   const ZOOM = { land: 0.8, port: 0.84 };
-  W_.init = function (canvas) { cv = canvas; ctx = cv.getContext('2d'); W_.resize(); sampleGuide(); };
+  W_.init = function (canvas) { cv = canvas; ctx = cv.getContext('2d'); W_.resize(); sampleGuide(); floatCoral(); };
+  /** Sea gates rise out of open water: fade out the sand patch baked into the bottom of the coral art (once, on a canvas copy). */
+  function floatCoral() {
+    ['world/gates/gate-coral', 'world/gates/gate-coral-passed'].forEach(key => {
+      const im = A.img(key); if (!im || !im.width) return;
+      const c = document.createElement('canvas'), w = c.width = im.naturalWidth, h = c.height = im.naturalHeight, x = c.getContext('2d');
+      x.drawImage(im, 0, 0);
+      x.globalCompositeOperation = 'destination-out';
+      const g = x.createLinearGradient(0, h * 0.8, 0, h * 0.95);
+      g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,1)');
+      x.fillStyle = g; x.fillRect(0, h * 0.8, w, h * 0.2);
+      A.images[key + '@float'] = c;
+    });
+  }
   W_.resize = function () {
     const st = SB.layout.stage; Z = ZOOM[SB.layout.mode] || 1; W = st.w / Z; H = st.h / Z;
     pr = U_.clamp(SB.layout.scale * (window.devicePixelRatio || 1), 0.6, 2) * Z;   // same sharpness per screen pixel
@@ -39,7 +53,9 @@
 
   /* ---------- camera ---------- */
   const cam = W_.cam = { x: 0, y: 0, shake: 0 };
-  const cine = W_.cine = { z: 1 };                 // extra camera zoom toward the ship, used by the arrival scene (≥ 1)
+  const cine = W_.cine = { z: 1 };
+  const guideLine = { k: 1 };                      // how much of the dashed guide line to the gate is drawn (0…1)
+  W_.revealGuide = delay => gsap.fromTo(guideLine, { k: 0 }, { k: 1, duration: 0.7, delay, ease: 'power2.out' });                 // extra camera zoom toward the ship, used by the arrival scene (≥ 1)
   const vx = () => SB.layout.view.sx * W, vy = () => SB.layout.view.sy * H;
   const sx = (wx, p = 1) => (wx - cam.x) * p + vx();
   const sy = (wy, p = 1) => (wy - cam.y) * p + vy();
@@ -173,7 +189,8 @@
       const shipX = sx(SB.state.ship.x);
       ctx.save(); ctx.setLineDash([16, 14]); ctx.lineDashOffset = -t * 40; ctx.lineWidth = 5; ctx.lineCap = 'round';
       ctx.strokeStyle = 'rgba(255,214,90,.9)'; ctx.shadowColor = 'rgba(255,190,40,.8)'; ctx.shadowBlur = 8;
-      ctx.beginPath(); ctx.moveTo(Math.max(shipX + 120, 140), y); ctx.lineTo(x - 30, y); ctx.stroke(); ctx.restore();
+      const x0 = Math.max(shipX + 120, 140);
+      ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x0 + (x - 30 - x0) * guideLine.k, y); ctx.stroke(); ctx.restore();
     }
     const pulse = g.active ? 1 + Math.sin(t * 4) * 0.025 : 1;
     if (pos) {
@@ -183,7 +200,8 @@
       plaqueText(g.h, x, y + (G.ring.plaqueY - G.ring.hole) * gh, gh * 0.15, g);
     } else {
       const gh = G.coral.h * pulse, gw = A.wForH(G.coral.key, gh);
-      sprite(g.passed ? 'world/gates/gate-coral-passed' : G.coral.key, x, y, gw, { h: gh, ax: 0.5, ay: G.coral.hole });
+      const ck = g.passed ? 'world/gates/gate-coral-passed' : G.coral.key;
+      sprite(A.img(ck + '@float') ? ck + '@float' : ck, x, y, gw, { h: gh, ax: 0.5, ay: G.coral.hole });
       const pw = 150, top = y - G.coral.hole * gh - 8;
       sprite('world/gates/plaque-small', x, top, pw, { ay: 1 });
       plaqueText(g.h, x, top - A.hForW('world/gates/plaque-small', pw) * 0.5, 50, g);
@@ -233,15 +251,17 @@
     sprite(S.dented ? 'vessel/gondola/gondola-dented' : G.body.key, 0, 0, G.body.w, { ay: G.body.cy });
     sprite('vessel/gondola/hook-rail', 0, bottomY - 4, 150, { ay: 0.3 });
     ctx.restore();
-    // 6. sandbags hanging from the rail
-    atts.filter(k => k.type === 's').forEach(k => {
-      const bx = sx(k.x), by = sy(k.y);
-      if (k.row) {   // second row: extra rope down from the rail
-        ctx.save(); ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(120,78,30,.95)';
-        ctx.beginPath(); ctx.moveTo(x + k.ax, y + bottomY + 2); ctx.lineTo(bx, by + 4); ctx.stroke(); ctx.restore();
-      }
-      drawSandbag(k);
+    // 6. sandbags: a rope from a rail ring (following the ship's tilt) to each bag's knot, then the bags over the ropes
+    const bags = atts.filter(k => k.type === 's'), cs = Math.cos(tilt), sn = Math.sin(tilt), ry = bottomY + W_.ship.ringY;
+    ctx.save(); ctx.lineCap = 'round';
+    bags.forEach(k => {
+      const rx = x + cs * k.ax - sn * ry, rY = y + sn * k.ax + cs * ry, bx = sx(k.x), by = sy(k.y) + 5;
+      ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(110,70,26,.95)';
+      ctx.beginPath(); ctx.moveTo(rx, rY); ctx.quadraticCurveTo((rx + bx) / 2, (rY + by) / 2 + 3, bx, by); ctx.stroke();
+      ctx.fillStyle = '#d9a63a'; ctx.beginPath(); ctx.arc(rx, rY, 3.2, 0, Math.PI * 2); ctx.fill();   // brass knot on the ring
     });
+    ctx.restore();
+    bags.forEach(drawSandbag);
   }
   function drawBalloon(k) {
     const g = G.balloon;

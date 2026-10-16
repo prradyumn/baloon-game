@@ -106,6 +106,14 @@
       hideCoach();
       if (coachQueue.length) setTimeout(() => HUD.coach(coachQueue.shift()), 900);
     },
+    /** Bring the HUD in piece by piece (after the arrival scene): number line, buttons, top buttons, equation. */
+    buildIn() {
+      const tl = gsap.timeline();
+      tl.from('#altimeter', { x: -180, opacity: 0, duration: 0.55, ease: 'power3.out' })
+        .from('#dock .pod:not([hidden])', { y: 170, opacity: 0, duration: 0.5, stagger: 0.09, ease: 'back.out(1.6)' }, 0.09)
+        .from('#topbar > *', { y: -120, opacity: 0, duration: 0.45, stagger: 0.09, ease: 'back.out(1.8)' }, 0.18)
+        .from('#eqbar .eq-pill', { y: 60, scale: 0.85, opacity: 0, duration: 0.45, ease: 'back.out(2)' }, 0.27);
+    },
     /** Waited a while at a gate: invite a hint instead of giving one. */
     nudgeHint() { gsap.fromTo('#btn-hint', { scale: 1 }, { scale: 1.18, duration: 0.25, yoyo: true, repeat: 5, ease: 'sine.inOut' }); },
     /** The integer sentence for the last move, e.g. (+2) + (−1) = (+1). opVal is the token value moved. */

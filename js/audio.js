@@ -76,10 +76,11 @@
   function loadAllPacks() { new Set(Object.values(LINES).map(id => id[0])).forEach(loadPack); }
   let clipVo = null;
   function stopClip() { if (clipVo) { clipVo.onerror = null; clipVo.pause(); clipVo = null; } }
-  function speak(text) {
-    if (!('speechSynthesis' in window)) return;
+  function speak(text, onEnd) {
+    if (!('speechSynthesis' in window)) { if (onEnd) onEnd(); return; }
     voice = voice || pickVoice();
     const u = new SpeechSynthesisUtterance(text); if (voice) u.voice = voice; u.rate = 1; u.pitch = 1.08;
+    if (onEnd) u.onend = onEnd;
     speechSynthesis.speak(u);
   }
   let voice = null;
@@ -93,13 +94,15 @@
     play(n) { if (!on) return; if (!clip(n) && SFX[n]) SFX[n](); },
     toggle() { on = !on; if (!on) SB.audio.stopVoice(); return on; },
     get on() { return on; },
-    say(text, { interrupt = true } = {}) {
-      if (!on || !text) return;
+    /** Speak a line (recorded clip if we have it). onEnd runs when it finishes, or at once when sound is off. */
+    say(text, { interrupt = true, onEnd } = {}) {
+      if (!on || !text) { if (onEnd) onEnd(); return; }
       if (interrupt) SB.audio.stopVoice();
       const id = LINES[text], uri = id && voData[id];
-      if (!uri) { if (id) loadPack(id[0]); return speak(text); }
+      if (!uri) { if (id) loadPack(id[0]); return speak(text, onEnd); }
       const a = clipVo = new Audio(uri);
-      a.onerror = () => { if (clipVo === a) { clipVo = null; speak(text); } };   // missing file: fall back to the browser voice
+      if (onEnd) a.onended = onEnd;
+      a.onerror = () => { if (clipVo === a) { clipVo = null; speak(text, onEnd); } };   // missing file: fall back to the browser voice
       a.play().catch(() => {});
     },
     stopVoice() { stopClip(); if ('speechSynthesis' in window) speechSynthesis.cancel(); }

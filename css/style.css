@@ -177,11 +177,7 @@ body.plan-mode .pod { display: none; } body.plan-mode #plan { display: flex; }
 @media (prefers-reduced-motion: reduce) { #coach-hand, #alt-gap i { animation: none; } }
 #toast { display: flex; align-items: center; justify-content: center; pointer-events: none !important; opacity: 0; }
 #toast span { font-size: 96px; font-weight: 700; color: #fff; -webkit-text-stroke: 14px var(--ink); paint-order: stroke fill; }
-/* arrival scene: letterbox bars slide in, the HUD steps aside */
-.cut-bar { position: absolute; left: 0; right: 0; height: 0; background: #0b1230; z-index: 18; transition: height .5s ease; pointer-events: none; }
-.cut-bar.top { top: 0; } .cut-bar.bottom { bottom: 0; }
-body.cutscene .cut-bar { height: 132px; }                 /* ≈ 2.39 : 1 cinema frame */
-body.cutscene .port .cut-bar { height: 220px; }
+/* arrival scene: full 16:9 frame, a soft vignette, the HUD steps aside */
 #hud { transition: opacity .4s ease; }
 body.cutscene #hud { opacity: 0; pointer-events: none; }
 body.cutscene #hud > * { pointer-events: none; }
@@ -193,9 +189,9 @@ body.cutscene .cut-vignette { opacity: 1; }
 #cut-title b { font-size: 108px; font-weight: 700; letter-spacing: 2px; line-height: 1; text-shadow: 0 6px 24px rgba(10, 20, 60, .45), 0 2px 0 rgba(10, 20, 60, .25); }
 #cut-title small { font-size: 30px; font-weight: 600; letter-spacing: 6px; text-transform: uppercase; opacity: .92; text-shadow: 0 3px 12px rgba(10, 20, 60, .5); }
 .port #cut-title { top: 74%; } .port #cut-title b { font-size: 96px; }
-#cut-skip { position: absolute; right: 36px; bottom: 112px; z-index: 19; display: none; height: 60px; font-size: 24px; padding: 0 26px; opacity: .9; }
+#cut-skip { position: absolute; right: 36px; bottom: 36px; z-index: 19; display: none; height: 60px; font-size: 24px; padding: 0 26px; opacity: .9; }
 body.cutscene #cut-skip { display: inline-flex; }
-.port #cut-skip { bottom: 170px; }
+.port #cut-skip { bottom: 48px; }
 #drag-ghost { position: absolute; left: 0; top: 0; z-index: 50; pointer-events: none; display: none; filter: drop-shadow(0 12px 8px rgba(0,0,0,.3)); }
 #drag-ghost.on { display: block; }
 

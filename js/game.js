@@ -30,12 +30,15 @@
         k.ax = U_.clamp(k.rx * 0.55 + 10, -78, 82);
       }
     }
+    // each sandbag hangs on its own rope from one of the 8 rings of the hook rail (W_.ship.rings), spread across the rail
+    const R = W_.ship.rings;
     ss.forEach((k, i) => {
       const row = i < 5 ? 0 : 1, n = row ? ss.length - 5 : Math.min(5, ss.length), j = row ? i - 5 : i;
       k.row = row;
       k.rx = (j - (n - 1) / 2) * 40 + (row ? 20 : 0);
-      k.ry = bottomY - 2 + row * 52;
-      k.ax = U_.clamp(k.rx, -64, 64);
+      k.ry = bottomY + 24 + row * 56;
+      const ring = n === 1 ? 3 + row : Math.round(j * (R.length - 1 - row) / (n - 1)) + row;   // row 2 uses the rings in between
+      k.ax = R[U_.clamp(ring, 0, R.length - 1)];
     });
   }
   function makeToken(type, wx, wy) {
