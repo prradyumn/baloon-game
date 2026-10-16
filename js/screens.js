@@ -15,11 +15,10 @@
       ['screen-map', 'screen-results', 'screen-pause', 'screen-intro'].forEach(id => open(id, false));
       open('screen-title', true);
       SB.game.load({ id: 0, world: '', name: '', min: -6, max: 10, start: { b: 4, s: 1 }, crate: { b: 0, s: 0 }, gates: [], intro: [] }, { demo: true });
-      gsap.killTweensOf(['#title-logo', '#title-tag', '#title-play', '.cast', '.cast img']);
+      gsap.killTweensOf(['#title-logo', '#title-play', '.cast', '.cast img']);
       const tl = gsap.timeline();
       tl.fromTo('#title-logo', { y: -120, scale: 0.6, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.9, ease: 'back.out(1.6)' })
         .fromTo('#cast-pilot', { y: 90, scale: 0.7, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.7, ease: 'back.out(1.8)' }, '-=0.45')
-        .fromTo('#title-tag', { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.4 }, '-=0.4')
         .fromTo('#title-play', { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(2.4)' }, '-=0.2');
       gsap.to('#title-logo', { y: -10, duration: 2.4, yoyo: true, repeat: -1, ease: 'sine.inOut', delay: 1 });
       // the pilot bobs gently and now and then cheers; the sea line breathes
