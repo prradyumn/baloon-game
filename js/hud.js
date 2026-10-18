@@ -10,6 +10,7 @@
   const NAV = { point: 'nav-point', think: 'nav-think', happy: 'nav-thumbs-up', alarm: 'nav-alarm', cheer: 'nav-cheer', shrug: 'nav-shrug', map: 'nav-map', wave: 'nav-wave' };
   let lv = null, planVal = 0, navTimer = null, relevant = {}, avail = {}, gapKey = '', coaching = null, coachQueue = [];
   const BTN = { addB: 'btn-add-b', addS: 'btn-add-s', takeB: 'btn-take-b', takeS: 'btn-take-s', pair: 'pairbtn' };
+  const DIR = { addB: 1, takeB: -1, addS: -1, takeS: 1, pair: 0 };   // which way each tool moves the ship (for the preview)
   const COACH = {
     addB: 'Tap Add to add a balloon: + (+1) takes us UP!',
     addS: 'Tap Add to add a sandbag: + (−1) takes us DOWN!',
@@ -30,6 +31,11 @@
       $('btn-add-s').onclick = act('addS', 'addSandbag');
       $('btn-take-s').onclick = act('takeS', 'takeSandbag');
       $('pairbtn').onclick = act('pair', 'addPair');
+      // hovering a tool previews where it takes the ship (the coach shows the same for a new tool)
+      Object.entries(BTN).forEach(([t, id]) => {
+        $(id).addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') HUD.preview(DIR[t]); });
+        $(id).addEventListener('pointerleave', () => HUD.preview(coaching ? DIR[coaching] : 0));
+      });
       $('plan-dec').onclick = () => { planVal--; renderPlan(); };
       $('plan-inc').onclick = () => { planVal++; renderPlan(); };
       $('plan-go').onclick = () => { if (planVal !== 0 || SB.game.net() === (S.gates[S.gi] || {}).h) SB.game.planMove(planVal); };
@@ -80,7 +86,12 @@
       const key = gap ? n + '|' + g.h : '';
       if (key !== gapKey) { gapKey = key; drawGap(gap ? n : 0, gap ? g.h : 0); }
       if (coaching) placeCoach();
+      const pv = $('alt-ghost');
+      if (S.preview && g !== undefined) { pv.className = S.preview > 0 ? 'up show' : 'down show'; pv.style.transform = `translateY(${altY(n + S.preview)}px)`; }
+      else pv.className = '';
     },
+    /** Show which way the next move goes: +1 up, −1 down, 0 off (chevrons at the ship, a ghost on the number line). */
+    preview(dir) { S.preview = dir || 0; },
     /** Is this tool unlocked in the current level? */
     canUse: t => !!avail[t],
     /** Unlock a tool early because the ship needs it now; the coach hand shows it. */
@@ -94,7 +105,7 @@
     /** Pointing hand + short caption over a tool's button, until the child uses it. */
     coach(t, force) {
       const b = $(BTN[t]); if (!b || (!force && b.offsetParent === null)) return;
-      coaching = t; b.classList.add('is-new');
+      coaching = t; b.classList.add('is-new'); HUD.preview(DIR[t]);
       $('coach-tip').innerHTML = colorEq(COACH[t]);
       const c = $('coach'); c.classList.add('show'); placeCoach();
       gsap.fromTo(c, { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(2)' });
@@ -185,7 +196,7 @@
   function setBtn(id, on, show = true) { const b = $(id); b.disabled = !on; b.hidden = !show; }
   function hideCoach() {
     if (coaching) { const b = $(BTN[coaching]); if (b) b.classList.remove('is-new'); }
-    coaching = null; $('coach').classList.remove('show');
+    coaching = null; $('coach').classList.remove('show'); HUD.preview(0);
   }
   /** Hand points down onto the button from above (its fingertip is at 46,84 of the 96px icon); caption above the hand. */
   function placeCoach() {
@@ -227,9 +238,10 @@
   function altY(h) { return trackTop + (range.max - U_.clamp(h, range.min - 0.4, range.max + 0.4)) / (range.max - range.min) * trackH; }
   function buildAltimeter(level) {
     range = { min: level.min, max: level.max };
-    const el = $('altimeter'), H = el.clientHeight, w = el.clientWidth;
-    const cap = w / 142;                       // frame sprite is 142 px wide
-    trackTop = 92 * cap; trackH = H - trackTop - 92 * cap;
+    const el = $('altimeter'), H = el.clientHeight, inset = 34;   // room for the + / − caps (matches --tt in the CSS)
+    trackTop = inset + 12; trackH = H - 2 * (inset + 12);
+    el.style.setProperty('--tt', inset + 'px');
+    el.style.setProperty('--zero', ((altY(0) - inset) / (H - 2 * inset) * 100).toFixed(1) + '%');   // the track turns from warm to cool at 0
     const box = $('alt-ticks'); box.innerHTML = '';
     const step = 2;                            // label every second step (0 is always labelled); the target has its own marker
     for (let h = level.max; h >= level.min; h--) {

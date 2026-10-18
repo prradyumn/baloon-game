@@ -66,21 +66,25 @@ body:not([data-screen="play"]):not([data-screen="results"]) #hud { display: none
 
 #topbar { display: flex; gap: 16px; justify-content: flex-end; }
 
-/* altimeter: the vertical number line (frame sprite as a 3-slice) */
-#altimeter {
-  pointer-events: none !important;
-  border-style: solid; border-width: 0; border-image: url(../assets/ui/cockpit-hud/altimeter-frame.png) 92 0 92 0 fill / 0 0 0 0 stretch;
-  filter: drop-shadow(0 8px 10px rgba(16,24,64,.3));
-}
-.land #altimeter, .port #altimeter { border-image-width: calc(92px * var(--k, .73)) 0; }
+/* altimeter: the vertical number line — a slim drawn track (warm above 0, cool below), + cap on top, − cap at the bottom */
+#altimeter { pointer-events: none !important; --tt: 34px; --zero: 50%; }
+#altimeter::before { content: ''; position: absolute; left: 50%; top: var(--tt); bottom: var(--tt); width: 16px; margin-left: -8px; border-radius: 8px;
+  background: linear-gradient(#ffad5c, #ffe2c2 var(--zero), #cfe5ff var(--zero), #6fb0f2);
+  box-shadow: 0 0 0 2.5px rgba(42, 24, 70, .55), 0 0 0 6px rgba(255, 255, 255, .8), 0 6px 14px rgba(16, 24, 64, .22); }
 #alt-ticks { position: absolute; inset: 0; }
+#alt-ticks::before, #alt-ticks::after { position: absolute; left: 50%; width: 30px; height: 30px; margin-left: -15px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 24px; font-weight: 700; line-height: 1; color: #fff; box-shadow: 0 0 0 3px #fff, 0 4px 10px rgba(16, 24, 64, .25); }
+#alt-ticks::before { content: '+'; top: calc(var(--tt) - 30px); background: linear-gradient(#ffa64a, var(--plus)); }
+#alt-ticks::after { content: '−'; bottom: calc(var(--tt) - 30px); background: linear-gradient(#5aa2f0, var(--minus)); }
 .tick { position: absolute; left: 0; right: 0; height: 0; }
-.tick i { position: absolute; left: 31%; width: 38%; height: 3px; margin-top: -1.5px; background: rgba(110,70,20,.55); border-radius: 2px; }
-.tick span { position: absolute; left: calc(100% + 8px); transform: translateY(-50%); font-size: 23px; font-weight: 700; color: #fff;
-  -webkit-text-stroke: 4px var(--ink); paint-order: stroke fill; white-space: nowrap; }
-.tick.pos span { color: #ffd59a; } .tick.neg span { color: #bfe3ff; }
-.tick.zero i { left: 22%; width: 56%; height: 6px; margin-top: -3px; background: var(--gold); box-shadow: 0 0 0 2px #8a5a10; }
-.tick.zero span { color: var(--gold); font-size: 26px; }
+.tick i { position: absolute; left: 50%; width: 24px; height: 3px; margin: -1.5px 0 0 -12px; background: rgba(42, 24, 70, .6); border-radius: 2px; }
+/* numbers: deep colours with a soft white glow, readable over sky and water alike */
+.tick span { position: absolute; left: calc(100% + 8px); transform: translateY(-50%); font-size: 27px; font-weight: 700; white-space: nowrap; color: var(--ink);
+  text-shadow: 0 0 2px #fff, 0 0 4px #fff, 0 0 7px #fff, 0 0 12px rgba(255, 255, 255, .9); }
+.tick.pos span { color: #b84f00; } .tick.neg span { color: #1452a8; }
+.tick.zero i { width: 40px; height: 6px; margin: -3px 0 0 -20px; background: var(--gold); box-shadow: 0 0 0 2px #8a5a10; border-radius: 3px; }
+.tick.zero span { color: #8a5a00; font-size: 30px; }
+.port .tick span { font-size: 34px; } .port .tick.zero span { font-size: 38px; }
 .tick.minor span { display: none; }
 /* the steps still to go to the gate: ghost dots on the number line, plus the count */
 #alt-gap { position: absolute; inset: 0; pointer-events: none; }
@@ -89,8 +93,14 @@ body:not([data-screen="play"]):not([data-screen="results"]) #hud { display: none
 #alt-gap b { position: absolute; left: calc(100% + 56px); transform: translateY(-50%); z-index: 3; padding: 2px 12px; border-radius: 14px; font-size: 26px; font-weight: 700;
   color: #fff; box-shadow: 0 0 0 3px #fff, 0 6px 12px rgba(16,24,64,.3); }
 #alt-gap b.pos { background: var(--plus); } #alt-gap b.neg { background: var(--minus); }
+/* preview of the next move on the number line: a dashed ghost one step up (orange) or down (blue) */
+#alt-ghost { position: absolute; left: 50%; top: 0; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; display: none; z-index: 2;
+  border: 5px dashed currentColor; background: rgba(255, 255, 255, .9); box-shadow: 0 0 10px 2px currentColor; }
+#alt-ghost.show { display: block; animation: ghostPulse 1s ease-in-out infinite; }
+#alt-ghost.up { color: var(--plus); } #alt-ghost.down { color: var(--minus); }
+@keyframes ghostPulse { 50% { opacity: .6; } }
 @keyframes gapPop { from { transform: scale(0); opacity: 0; } }
-#alt-ship { position: absolute; left: 50%; top: 0; width: 46px; margin: -30px 0 0 -23px; filter: drop-shadow(0 3px 2px rgba(0,0,0,.35)); }
+#alt-ship { position: absolute; left: 50%; top: 0; width: 42px; margin: -27px 0 0 -21px; z-index: 1; filter: drop-shadow(0 3px 2px rgba(0,0,0,.35)); }
 #alt-target { position: absolute; left: 100%; top: 0; margin-left: 2px; transition: opacity .3s; z-index: 2; }
 #alt-target span {
   position: absolute; left: 0; transform: translateY(-50%); background: var(--gold); color: var(--ink); font-weight: 700; font-size: 24px;
@@ -291,3 +301,105 @@ body.cutscene #cut-skip { display: inline-flex; }
 #loader-track { width: min(60vw, 360px); height: 14px; border-radius: 10px; background: rgba(255,255,255,.3); overflow: hidden; }
 #loader-bar { display: block; height: 100%; width: 0; background: var(--gold); }
 @keyframes cardpop { from { scale: .85; opacity: 0; } to { scale: 1; opacity: 1; } }
+
+/* ---------- story intro (js/story.js): one continuous vertical world, the camera rides the number line ---------- */
+#screen-story { overflow: hidden; background: #8fd0f4; z-index: 40; cursor: pointer; }
+.st-world { position: absolute; left: 0; top: 0; width: 100%; will-change: transform; }
+.st-world > * { position: absolute; }
+.st-dusk { pointer-events: none; opacity: 0;
+  -webkit-mask-image: linear-gradient(transparent 0%, #000 22%, #000 62%, transparent 92%); mask-image: linear-gradient(transparent 0%, #000 22%, #000 62%, transparent 92%); }
+.st-clouds { left: 0; top: 0; width: 100%; }
+.stc { position: absolute; height: 58px; border-radius: 58px; background: #fff; opacity: .85; box-shadow: 40px -22px 0 6px #fff, 92px -6px 0 -4px #fff; animation: tcDrift 40s linear infinite; }
+/* number line */
+.st-line { top: 0; width: 0; }
+.st-track { position: absolute; left: -9px; width: 18px; border-radius: 9px; transform-origin: 50% 47%;
+  background: linear-gradient(#ffad5c, #ffe2c2 47%, #cfe5ff 53%, #6fb0f2); box-shadow: 0 0 0 2.5px rgba(42, 24, 70, .5), 0 0 0 7px rgba(255, 255, 255, .75); }
+.st-tick { position: absolute; left: 0; height: 0; }
+.st-tick i { position: absolute; left: -14px; width: 28px; height: 3px; margin-top: -1.5px; border-radius: 2px; background: rgba(42, 24, 70, .6); }
+.st-tick span { position: absolute; left: 26px; transform: translateY(-50%); font-size: 30px; font-weight: 700; white-space: nowrap; transition: transform .3s, filter .3s;
+  text-shadow: 0 0 2px #fff, 0 0 5px #fff, 0 0 10px rgba(255, 255, 255, .9); }
+.st-tick.pos span { color: #b84f00; } .st-tick.neg span { color: #1452a8; }
+.st-tick.zero i { left: -24px; width: 48px; height: 7px; margin-top: -3.5px; background: var(--gold); box-shadow: 0 0 0 2px #8a5a10; }
+.st-tick.zero span { color: #8a5a00; font-size: 36px; }
+.st-tick.hit span { transform: translateY(-50%) scale(1.3); filter: drop-shadow(0 0 8px rgba(255, 214, 90, .95)); }
+/* scene 2 teaching layer: warm sky half (positive), cool sea half (negative), sea level = 0 */
+.st-wash { left: 0; width: 100%; pointer-events: none; }
+.st-wash.pos { background: linear-gradient(to top, rgba(255, 140, 40, .34), rgba(255, 170, 80, .12) 55%, rgba(255, 170, 80, 0)); transform-origin: 50% 100%; }
+.st-wash.neg { background: linear-gradient(to bottom, rgba(20, 90, 200, .38), rgba(30, 110, 210, .14) 55%, rgba(30, 110, 210, 0)); transform-origin: 50% 0; }
+.st-big { display: flex; align-items: center; gap: 16px; transform: translate(-50%, -50%); padding: 14px 30px 14px 20px; border-radius: 30px; color: #fff; white-space: nowrap;
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, .9), 0 14px 30px rgba(16, 24, 64, .28); }
+.st-big.pos { background: linear-gradient(#ff9a3c, var(--plus)); } .st-big.neg { background: linear-gradient(#4b93ea, var(--minus)); }
+.st-big .arw { font-size: 46px; line-height: 1; animation: stArw 1s ease-in-out infinite; }
+.st-big.neg .arw { animation-name: stArwDn; }
+@keyframes stArw { 50% { transform: translateY(-8px); } } @keyframes stArwDn { 50% { transform: translateY(8px); } }
+.st-big .txt { display: flex; flex-direction: column; line-height: 1.05; }
+.st-big strong { font-size: 54px; font-weight: 700; } .st-big small { font-size: 24px; font-weight: 600; opacity: .95; }
+.st-zero-badge { display: flex; align-items: baseline; gap: 12px; transform: translate(-50%, -50%); padding: 8px 26px; border-radius: 26px; white-space: nowrap;
+  background: #fff6d6; color: #8a5a00; box-shadow: 0 0 0 5px var(--gold), 0 0 34px 10px rgba(255, 214, 90, .8); }
+.st-zero-badge strong { font-size: 64px; font-weight: 700; line-height: 1; } .st-zero-badge small { font-size: 28px; font-weight: 700; }
+.st-tick.lit span { filter: drop-shadow(0 0 6px rgba(255, 255, 255, .9)); }
+.st-zero, .st-big, .st-zero-badge { z-index: 5; }   /* above the water layer, so they read at full strength */
+.port .st-big strong { font-size: 58px; } .port .st-zero-badge strong { font-size: 70px; }
+@media (prefers-reduced-motion: reduce) { .st-big .arw { animation: none; } }
+.st-mark { position: absolute; left: -18px; width: 36px; height: 36px; margin-top: -18px; border-radius: 50%; background: rgba(255, 214, 90, .5);
+  box-shadow: 0 0 0 4px #fff, 0 0 16px 4px rgba(255, 214, 90, .9); }
+/* the Zero Light: beam, sea-level line, crystal, lighthouse */
+.st-zero { left: 0; width: 100%; height: 8px; margin-top: -4px; border-radius: 4px; pointer-events: none;
+  background: linear-gradient(90deg, rgba(255, 214, 90, 0), rgba(255, 224, 120, .95) 8%, #fff6d0 50%, rgba(255, 224, 120, .95) 92%, rgba(255, 214, 90, 0));
+  box-shadow: 0 0 22px 8px rgba(255, 214, 90, .55); }
+.st-lh img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; filter: drop-shadow(0 14px 18px rgba(16, 24, 64, .25)); }
+.st-beam { width: 2400px; height: 220px; margin: -110px 0 0 -1200px; pointer-events: none; mix-blend-mode: screen;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(255, 252, 225, .95), rgba(255, 236, 160, .55) 30%, rgba(255, 236, 160, 0) 75%);
+  clip-path: polygon(0 0, 50% 45%, 100% 0, 100% 100%, 50% 55%, 0 100%); }
+.st-crystal { filter: drop-shadow(0 0 16px rgba(200, 245, 255, .95)); }
+.st-blimp { left: 0; top: 0; } .st-blimp img { width: 100%; filter: drop-shadow(0 16px 18px rgba(16, 24, 64, .3)); }
+#st-shards { left: 0; top: 0; }
+#st-shards > * { position: absolute; }
+.st-shard { filter: drop-shadow(0 0 14px rgba(170, 240, 255, .95)); }
+.st-badge { margin-top: -26px; padding: 4px 16px; border-radius: 18px; font-size: 34px; font-weight: 700; color: #fff; white-space: nowrap;
+  box-shadow: 0 0 0 4px #fff, 0 8px 16px rgba(16, 24, 64, .25); }
+.st-badge.pos { background: var(--plus); } .st-badge.neg { background: var(--minus); }
+.st-flash { border-radius: 50%; pointer-events: none; background: radial-gradient(circle, #fff 0%, rgba(255, 250, 220, .8) 30%, rgba(255, 255, 255, 0) 70%); }
+/* the little airship for the balloon / sandbag demo */
+.st-ship { width: 230px; height: 260px; transform-origin: 50% 76%; scale: var(--k, 1); }
+.st-ship img { position: absolute; }
+.st-ship .pilot { left: 62px; top: 40px; width: 100px; }
+.st-ship .body { left: 0; top: 70px; width: 230px; }
+.st-ship .bal { left: 92px; top: -90px; width: 64px; }
+.st-ship .rope { position: absolute; left: 123px; top: 2px; width: 3px; height: 74px; background: rgba(95, 58, 22, .9); }
+.st-ship .bag { left: 96px; top: 222px; width: 52px; }
+.st-gate img { width: 100%; height: 100%; }
+.st-gate b { position: absolute; left: 0; right: 0; top: 26.8%; transform: translateY(-50%); text-align: center; font-size: 48px; font-weight: 700;
+  color: #ffd9a8; -webkit-text-stroke: 8px #a8470a; paint-order: stroke fill; }
+.st-guide { height: 5px; margin-top: -2.5px; transform-origin: 0 50%;
+  background: repeating-linear-gradient(90deg, rgba(255, 214, 90, .95) 0 16px, transparent 16px 30px); filter: drop-shadow(0 0 6px rgba(255, 190, 40, .8)); }
+.st-sea { left: 0; pointer-events: none; }
+#st-bubbles { left: 0; top: 0; }
+.st-bubble { position: absolute; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .85); background: rgba(255, 255, 255, .15); animation: stBubble 3s linear forwards; }
+@keyframes stBubble { to { transform: translate(14px, -320px); opacity: 0; } }
+/* screen-fixed layers */
+.st-vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 80% 75% at 50% 50%, rgba(8, 14, 40, 0) 62%, rgba(8, 14, 40, .22) 100%); }
+#st-cutins { position: absolute; inset: 0; pointer-events: none; }
+.st-cutin { position: absolute; width: var(--s); height: var(--s); border-radius: 50%; overflow: hidden;
+  background: radial-gradient(circle at 50% 38%, #ffffff, #dcf1fb 70%); box-shadow: 0 0 0 9px #fff, 0 0 0 13px rgba(42, 24, 70, .14), 0 24px 44px rgba(16, 24, 64, .32); }
+.st-cutin img { position: absolute; left: 7%; width: 86%; bottom: -4%; height: auto; }
+.st-cutin.r { right: 120px; } .st-cutin.l { left: 330px; }
+.port .st-cutin.r { right: 70px; } .port .st-cutin.l { left: 200px; }
+.st-cutin.l.edge { left: 40px; } .st-cutin.r.edge { right: 40px; }
+.st-height { position: absolute; left: 36px; top: 34px; display: flex; flex-direction: column; align-items: center; padding: 8px 22px 10px; border-radius: 22px;
+  background: rgba(255, 255, 255, .9); box-shadow: 0 8px 20px rgba(16, 24, 64, .2); pointer-events: none; }
+.st-height small { font-size: 15px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-soft); }
+.st-height b { font-size: 46px; line-height: 1.05; font-weight: 700; color: var(--ink); }
+.st-height b.pos { color: #b84f00; } .st-height b.neg { color: #1452a8; } .st-height b.zero { color: #8a5a00; }
+.st-caption { position: absolute; left: 0; right: 0; top: 62px; padding: 0 260px; text-align: center; pointer-events: none; color: var(--ink);
+  text-shadow: 0 0 3px #fff, 0 0 8px #fff, 0 0 18px rgba(255, 255, 255, .95); }
+.st-caption .line { display: block; font-size: 58px; font-weight: 700; line-height: 1.15; }
+.st-caption .sub { display: block; margin-top: 12px; font-size: 36px; font-weight: 600; color: var(--ink-soft); }
+.st-caption .w { display: inline-block; }
+.st-caption .w.pos { color: #c25400; } .st-caption .w.neg { color: #1452a8; } .st-caption .w.zero { color: #a06c00; }
+.port .st-caption { top: 190px; padding: 0 60px; } .port .st-caption .line { font-size: 62px; } .port .st-caption .sub { font-size: 40px; }
+.st-dots { position: absolute; left: 0; right: 0; bottom: 44px; display: flex; justify-content: center; gap: 12px; pointer-events: none; }
+.st-dots i { width: 14px; height: 14px; border-radius: 7px; background: rgba(255, 255, 255, .65); box-shadow: 0 0 0 2px rgba(42, 24, 70, .2); transition: width .3s, background .3s; }
+.st-dots i.done { background: rgba(106, 43, 217, .55); } .st-dots i.on { width: 40px; background: var(--violet); }
+.st-skip { position: absolute; right: 36px; top: 34px; height: 60px; font-size: 24px; padding: 0 26px; }
+@media (prefers-reduced-motion: reduce) { .stc, .st-bubble { animation: none; } }

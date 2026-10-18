@@ -31,6 +31,7 @@
     L.onChange.push(() => W_.resize());
     SB.hud.init(); SB.screens.init();
     $('world').addEventListener('pointerdown', worldDrag);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) SB.audio.engine(0); });   // no hum from a hidden tab
     window.addEventListener('keydown', e => {
       if (SB.screens.current !== 'play') return;
       // keys press the on-screen buttons, so they follow the same unlocks
@@ -47,7 +48,8 @@
     });
     gsap.to('#loader', { opacity: 0, duration: 0.45, onComplete: () => $('loader').remove() });
     const q = new URLSearchParams(location.search);
-    if (q.has('level')) { SB.screens.intro(SB.LEVELS.find(l => l.id === +q.get('level')) || SB.LEVELS[0]); if (q.has('go')) { SB.game.skipArrival(); $('in-go').click(); } }
+    if (q.has('story')) SB.story.play(() => SB.screens.intro(SB.LEVELS[0]));
+    else if (q.has('level')) { SB.screens.intro(SB.LEVELS.find(l => l.id === +q.get('level')) || SB.LEVELS[0]); if (q.has('go')) { SB.game.skipArrival(); $('in-go').click(); } }
     else SB.screens.title();
   }
   window.addEventListener('DOMContentLoaded', () => boot().catch(err => {

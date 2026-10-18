@@ -29,7 +29,7 @@ window.SB = window.SB || {};
   const RECTS = {
     land: {
       'topbar':     { x: 1606, y: 26,  w: 284,  h: 84 },
-      'altimeter':  { x: 44,   y: 168, w: 104,  h: 760 },
+      'altimeter':  { x: 52,   y: 160, w: 64,   h: 780 },
       'nav':        { x: 1300, y: 132, w: 590,  h: 176 },
       'eqbar':      { x: 250,  y: 950, w: 900,  h: 104 },
       'dock':       { x: 1170, y: 790, w: 720,  h: 264 },
@@ -38,7 +38,7 @@ window.SB = window.SB || {};
     },
     port: {
       'topbar':     { x: 772,  y: 34,  w: 284,  h: 84 },
-      'altimeter':  { x: 26,   y: 190, w: 104,  h: 1000 },
+      'altimeter':  { x: 30,   y: 180, w: 64,   h: 1020 },
       'nav':        { x: 150,  y: 140, w: 906,  h: 170 },
       'eqbar':      { x: 24,   y: 1440, w: 1032, h: 112 },
       'dock':       { x: 24,   y: 1574, w: 1032, h: 318 },

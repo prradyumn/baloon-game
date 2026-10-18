@@ -262,6 +262,23 @@
     });
     ctx.restore();
     bags.forEach(drawSandbag);
+    if (S.preview) drawPreview(S, x, y, t);
+  }
+  /** Chevrons flowing the way the next move takes the ship: down (blue) below the sandbags, up (orange) above the balloons. */
+  function drawPreview(S, x, y, t) {
+    const { rimY, bottomY, BH, SH } = W_.ship, down = S.preview < 0, att = S.tokens.filter(k => k.attached);
+    const edge = down ? Math.max(bottomY + 30, ...att.filter(k => k.type === 's').map(k => k.ry + SH))
+                      : Math.min(rimY - 70, ...att.filter(k => k.type === 'b').map(k => k.ry - BH));
+    const ph = (t * 1.4) % 1, dir = down ? 1 : -1;
+    ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    for (let i = 0; i < 3; i++) {
+      const f = (i + ph) / 3, cy = y + edge + dir * (22 + (i + ph) * 30), a = Math.sin(f * Math.PI);
+      ctx.globalAlpha = a;
+      ctx.beginPath(); ctx.moveTo(x - 32, cy - dir * 15); ctx.lineTo(x, cy + dir * 5); ctx.lineTo(x + 32, cy - dir * 15);
+      ctx.lineWidth = 15; ctx.strokeStyle = 'rgba(255,255,255,.95)'; ctx.stroke();
+      ctx.lineWidth = 8; ctx.strokeStyle = down ? '#1c6fd8' : '#f07c12'; ctx.stroke();
+    }
+    ctx.restore();
   }
   function drawBalloon(k) {
     const g = G.balloon;

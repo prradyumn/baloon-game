@@ -1,4 +1,4 @@
-/* Sound + voice. Recorded SFX come from js/sfx-data.js (base64, so they load from file:// without fetch);
+/* Sound + voice. Recorded SFX come from js/sfx-data.js (OGG Opus as base64, so they load from file:// without fetch);
    any sound without a clip falls back to the synth below. Narration uses the browser voice. */
 (function (SB) {
   'use strict';
@@ -8,8 +8,9 @@
   /* ---------- recorded clips ---------- */
   const CLIPS = window.SFX_DATA || {}, buffers = {};
   const LEVEL = { click: 0.35, inflate: 0.7, hook: 0.7, release: 0.6, drop: 0.7, splash: 0.75, bump: 0.6, gull: 0.5, whoosh: 0.5,
-    pair: 0.6, gate: 0.7, coin: 0.5, star: 0.7, win: 0.8 };
-  const VARY = { click: 0.06, inflate: 0.08, hook: 0.06, release: 0.06, drop: 0.06, pair: 0.03, coin: 0.04, bump: 0.05 };   // pitch jitter so repeats don't sound robotic
+    pair: 0.6, gate: 0.7, coin: 0.5, star: 0.7, win: 0.8, dive: 0.75, surface: 0.45 };
+  const RATE = { surface: 1.12 };                  // base pitch (surfacing: lighter, drippier)
+  const VARY = { click: 0.06, dive: 0.05, surface: 0.06, inflate: 0.08, hook: 0.06, release: 0.06, drop: 0.06, pair: 0.03, coin: 0.04, bump: 0.05 };   // pitch jitter so repeats don't sound robotic
   function decodeClips() {
     Object.entries(CLIPS).forEach(([name, uri]) => {
       try {
@@ -24,10 +25,24 @@
   function clip(name) {
     const b = buffers[name], c = ac(); if (!b || !c) return false;
     const s = c.createBufferSource(), g = c.createGain();
-    s.buffer = b; s.playbackRate.value = 1 + (Math.random() * 2 - 1) * (VARY[name] || 0);
+    s.buffer = b; s.playbackRate.value = (RATE[name] || 1) * (1 + (Math.random() * 2 - 1) * (VARY[name] || 0));
     g.gain.value = LEVEL[name] ?? 0.7;
     s.connect(g).connect(c.destination); s.start();
     return true;
+  }
+  /* ---------- propeller: one looping voice whose loudness and pitch follow the ship's speed ---------- */
+  let eng = null;
+  function engine(level, rate) {
+    const c = ctx; if (!c || !buffers.engine) return;
+    if (!eng) {
+      const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+      s.buffer = buffers.engine; s.loop = true; s.loopStart = 0.04; s.loopEnd = buffers.engine.duration - 0.04;   // skip the codec's edge padding f.type = 'lowpass'; f.frequency.value = 1500; g.gain.value = 0;   // soft whirr, not a plane engine
+      s.connect(f).connect(g).connect(c.destination); s.start();
+      eng = { s, g };
+    }
+    const t = c.currentTime;
+    eng.g.gain.setTargetAtTime(on ? level * 0.22 : 0, t, 0.25);
+    eng.s.playbackRate.setTargetAtTime(rate, t, 0.3);
   }
   function tone(f, d, type = 'sine', v = 0.12, w = 0, f2 = null) {
     const c = ac(); if (!c || !on) return; const t = c.currentTime + w;
@@ -92,14 +107,16 @@
   SB.audio = {
     unlock() { unlocked = true; ac(); loadAllPacks(); },
     play(n) { if (!on) return; if (!clip(n) && SFX[n]) SFX[n](); },
+    /** The propeller loop: level 0…1 (0 = silent), rate = pitch. Called every frame by the game. */
+    engine(level, rate = 1) { engine(level, rate); },
     toggle() { on = !on; if (!on) SB.audio.stopVoice(); return on; },
     get on() { return on; },
     /** Speak a line (recorded clip if we have it). onEnd runs when it finishes, or at once when sound is off. */
-    say(text, { interrupt = true, onEnd } = {}) {
+    say(text, { interrupt = true, onEnd, recordedOnly = false } = {}) {
       if (!on || !text) { if (onEnd) onEnd(); return; }
       if (interrupt) SB.audio.stopVoice();
       const id = LINES[text], uri = id && voData[id];
-      if (!uri) { if (id) loadPack(id[0]); return speak(text, onEnd); }
+      if (!uri) { if (id) loadPack(id[0]); if (recordedOnly) { if (onEnd) onEnd(); return; } return speak(text, onEnd); }   // recordedOnly: no browser voice
       const a = clipVo = new Audio(uri);
       if (onEnd) a.onended = onEnd;
       a.onerror = () => { if (clipVo === a) { clipVo = null; speak(text, onEnd); } };   // missing file: fall back to the browser voice

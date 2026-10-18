@@ -100,7 +100,7 @@
         fx.push(gsap.to(tl, { timeScale: 1, duration: 0.6, delay: 0.55, ease: 'power1.in' }), gsap.to(S, { timeScale: 1, duration: 0.6, delay: 0.55, ease: 'power1.in' }));
       }, 3.55)
       .add(() => {
-        splash(sh.x - 40); splash(sh.x + 50); W_.cam.shake = 9; S.pose = 'cheer';
+        splash(sh.x - 40, 'dive'); splash(sh.x + 50, null); W_.cam.shake = 9; S.pose = 'cheer';
       }, 3.7)
     // 4. a wave to the camera, then pull back to the play view
       .add(() => { S.pose = 'wave'; }, 4.4)
@@ -224,9 +224,9 @@
   function tidyPairs() { const n = Math.min(attached('b').length, attached('s').length); for (let i = 0; i < n; i++) setTimeout(cancelOnePair, 200 + i * 220); }
   function restPose() { S.pose = S.ship.y > 10 ? 'dive' : 'steer'; }
   function flashPose(p) { S.pose = S.ship.y > 10 && p !== 'cheer' ? 'dive' : p; clearTimeout(S._poseT); S._poseT = setTimeout(restPose, 1100); }
-  function splash(x) {
+  function splash(x, sound = 'splash') {   // sound: 'splash' (a sandbag), 'dive' / 'surface' (the ship crossing sea level), or null
     S.particles.push({ kind: 'frames', keys: ['fx/flight/splash-1', 'fx/flight/splash-2', 'fx/flight/splash-3', 'fx/flight/splash-4'], fps: 11, x, y: 10, ay: 0.85, w: 130, age: 0, life: 0.38 });
-    AU.play('splash');
+    if (sound) AU.play(sound);
   }
   SB.game.splash = splash;
 
@@ -252,7 +252,7 @@
     else { sh.vy += ((ty - sh.y) * 20 - sh.vy * 6.5) * dt; sh.y += sh.vy * dt; }   // springy, balloon-like
     sh.tilt = U_.clamp(-sh.vy * 0.0006 + (sh.vx > 5 ? 0.025 : 0), -0.13, 0.13);
     const wasUnder = sh.underwater; sh.underwater = sh.y > 12;
-    if (wasUnder !== undefined && wasUnder !== sh.underwater && !S.demo) { splash(sh.x); if (!S._poseT || S.pose === 'steer' || S.pose === 'dive') restPose(); }
+    if (wasUnder !== undefined && wasUnder !== sh.underwater && !S.demo) { splash(sh.x, sh.underwater ? 'dive' : 'surface'); if (!S._poseT || S.pose === 'steer' || S.pose === 'dive') restPose(); }
     const g = S.gates[S.gi];
     let target = 0;
     if (S.phase === 'fly' || S.phase === 'hold') {
@@ -302,6 +302,9 @@
       if (g && S.planPending !== want) SB.hud.planWrong(S.planPending, want);
       S.planPending = null;
     }
+    // propeller hum: idles while we play, swells with speed, muffled under water, silent otherwise
+    const live = !S.demo && SB.screens.current === 'play' && (S.phase === 'fly' || S.phase === 'hold' || S.scripted), spd = U_.clamp(Math.abs(sh.vx) / V, 0, 1.3);
+    AU.engine(live ? (0.35 + 0.65 * Math.min(1, spd)) * (sh.underwater ? 0.5 : 1) : 0, 0.9 + 0.25 * spd);
     if (!S.demo) SB.hud.frame();
   };
 

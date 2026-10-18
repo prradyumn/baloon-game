@@ -110,13 +110,17 @@
     },
     init() {
       // first time: straight into level 1, where the coach hand teaches by doing; afterwards the voyage map
-      $('title-play').onclick = () => { AU.unlock(); AU.play('click'); Object.keys(U_.store.get('progress', {})).length ? SC.map() : SC.intro(SB.LEVELS[0]); };
+      $('title-play').onclick = () => {
+        AU.unlock(); AU.play('click');
+        // Play always opens with the story, then carries on: the voyage map if they have played before, else level 1
+        SB.story.play(() => Object.keys(U_.store.get('progress', {})).length ? SC.map() : SC.intro(SB.LEVELS[0]));
+      };
       $('map-home').onclick = () => SC.title();
       $('res-next').onclick = () => SC.intro(SB.LEVELS.find(x => x.id === S.level.id + 1));
       $('res-retry').onclick = () => SC.intro(S.level);
       $('res-map').onclick = () => SC.map();
       $('cut-skip').onclick = () => SB.game.skipArrival();
-      $('btn-pause').onclick = () => { if (SC.current !== 'play') return; SC.paused = true; gsap.globalTimeline.pause(); AU.stopVoice(); open('screen-pause', true); };
+      $('btn-pause').onclick = () => { if (SC.current !== 'play') return; SC.paused = true; gsap.globalTimeline.pause(); AU.stopVoice(); AU.engine(0); open('screen-pause', true); };
       $('pause-resume').onclick = () => { SC.paused = false; gsap.globalTimeline.resume(); open('screen-pause', false); };
       $('pause-restart').onclick = () => { $('pause-resume').onclick(); SC.intro(S.level); };
       $('pause-map').onclick = () => { $('pause-resume').onclick(); SC.map(); };

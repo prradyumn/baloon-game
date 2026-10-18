@@ -33,7 +33,10 @@ Open `index.html` in Chrome, Edge or Safari. Double-clicking works; no server or
 - `js/hud.js`: altimeter, equation ribbon, pods and the navigator
 - `js/screens.js`: title, how-to, voyage map, level intro, results and pause
 - `js/audio.js`: placeholder synth sound effects and the browser voice
-- `assets/`: cleaned sprites cut from your sheets, trimmed, with frame sets sharing one anchor
+- `assets/`: cleaned sprites cut from your sheets, trimmed, with frame sets sharing one anchor, stored as **WebP** (`js/asset-sizes.js` lists every image; regenerate it if art changes)
+- `js/sfx-data.js`: sound effects as **OGG Opus**, base64 so they load from file://; `assets/audio/voice-pack/`: the Gemini voice lines as OGG Opus packs (`js/voice-lines.js` maps each line to its clip)
+- Originals (PNG/JPG art, MP3/WAV audio) are kept outside the game in `../game-originals-backup/`; the voice masters are in `../audio-sources/voice/`
+- OGG needs Chrome, Edge, Firefox or Safari 18.4+; on older Safari the game falls back to its built-in synth sounds and the browser voice
 
 ## URL flags
 - `?level=5&go`: jump straight into level 5
