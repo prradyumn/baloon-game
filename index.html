@@ -134,7 +134,8 @@
 
       <!-- ================= VOYAGE MAP ================= -->
       <section id="screen-map" class="screen">
-        <div id="map-scroll"><div id="map-frame"><img id="map-img" src="assets/ui/world-map.webp" alt=""><div id="map-nodes"></div></div></div>
+        <!-- the same sky and sea as in play, one small island per level (drawn by SB.screens.map) -->
+        <div id="map-scroll"><div id="map-frame"><svg id="map-scene" viewBox="0 0 1920 1080" aria-hidden="true"></svg><div id="map-nodes"></div></div></div>
         <div id="map-hint">← swipe the map →</div>
         <div id="map-title">Voyage map</div>
         <button id="map-home" class="round-btn" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></button>
