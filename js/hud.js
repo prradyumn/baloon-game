@@ -73,6 +73,7 @@
         $(`pod-${t}-count`).hidden = !add;                       // the crate count only matters while you can add from it
         $(`pod-${t}`).classList.toggle('empty', add && c[t] <= 0);
       });
+      $('dock').classList.toggle('solo', document.querySelectorAll('#dock .pod:not([hidden]) .op-btn:not([hidden])').length === 1);
     },
     frame() {
       if (!lv) return;
@@ -175,11 +176,14 @@
       $('nav-text').innerHTML = colorEq(text);
       $('nav-img').src = A.url('characters/navigator-poses/' + (NAV[pose] || 'nav-point'));
       const nav = $('nav');
+      document.body.classList.add('nav-on');
       if (!nav.classList.contains('show')) { nav.classList.add('show'); gsap.fromTo(nav, { y: -20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: 'back.out(2)' }); }
       else gsap.fromTo('#nav-bubble', { scale: 0.94 }, { scale: 1, duration: 0.3, ease: 'back.out(3)' });
       clearTimeout(navTimer); navTimer = setTimeout(hideNav, ms);
       AU.say(speakable(text));
     },
+    /** Clear the bubbles (the results card opens over a quiet scene). */
+    quiet() { hideNav(true); hideCoach(); },
     toast(text) {
       const t = $('toast'); t.innerHTML = `<span>${colorEq(text)}</span>`;
       gsap.killTweensOf(t);
@@ -223,7 +227,7 @@
     }
   }
   function hideNav(instant) {
-    clearTimeout(navTimer);
+    clearTimeout(navTimer); document.body.classList.remove('nav-on');
     const nav = $('nav'); if (!nav.classList.contains('show')) return;
     if (instant === true) { nav.classList.remove('show'); return; }
     gsap.to(nav, { opacity: 0, y: -14, duration: 0.25, onComplete: () => nav.classList.remove('show') });

@@ -144,13 +144,15 @@ body:not([data-screen="play"]):not([data-screen="results"]) #hud { display: none
 .op-btn img { width: 88px; height: 88px; filter: drop-shadow(0 6px 5px rgba(10,20,60,.35)); }
 .op-btn i { position: absolute; top: 0; left: 50%; width: 88px; height: 88px; margin-left: -44px; display: grid; place-items: center; font-style: normal;
   font-size: 58px; font-weight: 700; color: #fff; text-shadow: 0 3px 0 rgba(0,0,0,.25); line-height: 1; padding-bottom: 6px; }
-.op-btn span { font-size: 21px; font-weight: 700; color: #fff; line-height: 1.05; text-align: center; -webkit-text-stroke: 5px var(--ink); paint-order: stroke fill; }
-.op-btn small { display: block; font-size: 18px; font-weight: 600; color: #fff; }
+.op-btn span { font-size: 21px; font-weight: 700; color: var(--ink); line-height: 1.1; text-align: center; white-space: nowrap;
+  background: var(--glass); border-radius: 14px; padding: 3px 12px 4px; box-shadow: 0 4px 10px rgba(10, 30, 70, .25); }
+.op-btn small { display: block; font-size: 18px; font-weight: 600; color: var(--ink-soft); }
 .op-btn:disabled { cursor: default; }
 .op-btn:disabled img, .op-btn:disabled i { filter: grayscale(1); opacity: .45; }
 .op-btn:disabled span { opacity: .55; }
 .op-btn:not(:disabled):hover img { transform: translateY(-3px); }
 .port #dock { justify-content: center; gap: 60px; }
+.land #dock.solo .pod { transform: scale(1.3); transform-origin: 100% 100%; }
 .port .op-btn img.tok { top: 58px; width: auto; height: 66px; left: calc(50% + 20px); }
 .port .op-btn .count { left: calc(50% + 22px); }
 .port .op-btn { width: 140px; } .port .op-btn img, .port .op-btn i { width: 112px; height: 112px; } .port .op-btn i { margin-left: -56px; font-size: 66px; }
@@ -175,6 +177,7 @@ body.plan-mode .pod { display: none; } body.plan-mode #plan { display: flex; }
 /* coach: a tapping hand on a new tool's button, with a one-line caption */
 #coach { position: absolute; inset: 0; display: none; z-index: 15; pointer-events: none !important; }
 #coach.show { display: block; }
+body.nav-on #coach-tip { visibility: hidden; }
 #coach-hand { position: absolute; width: 96px; height: 96px; fill: #fff; stroke: var(--ink); stroke-width: 1.1px; paint-order: stroke fill;
   filter: drop-shadow(0 6px 6px rgba(10,20,60,.35)); animation: coachTap 1s ease-in-out infinite; transform-origin: 48% 88%; }
 @keyframes coachTap { 0%, 100% { transform: translateY(0) scale(1); } 45% { transform: translateY(-16px) scale(1.04); } 60% { transform: translateY(0) scale(.94); } }

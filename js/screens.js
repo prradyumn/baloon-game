@@ -74,7 +74,7 @@
       setTimeout(() => SB.game.begin(), 1500);
     },
     introCard(l) {
-      $('in-level').textContent = `Level ${l.id} · ${l.world}`;
+      $('in-level').textContent = l.world === l.name ? `Level ${l.id}` : `Level ${l.id} · ${l.world}`;
       $('in-name').textContent = l.name;
       $('in-tip').innerHTML = l.intro.map(s => `<p>${s}</p>`).join('');
       const art = LV_ART[l.id];
@@ -92,10 +92,10 @@
     },
     play(l) { SC.intro(l); },
     results(l, stars) {
-      document.body.dataset.screen = 'results';
+      document.body.dataset.screen = 'results'; SB.hud.quiet();
       $('res-title').textContent = stars === 3 ? 'Perfect flight!' : stars === 2 ? 'Great flying!' : 'You made it!';
       const used = l.mode === 'plan' ? S.tries : S.moves;
-      $('res-moves').innerHTML = `${l.mode === 'plan' ? 'Tries' : 'Moves'} <b>${used}</b> <span>best ${l.par}</span> &nbsp;·&nbsp; Shells <b>${S.coins}</b>`;
+      $('res-moves').innerHTML = `${l.mode === 'plan' ? 'Tries' : 'Moves'} <b>${used}</b> <span>best ${l.par}</span>`;
       $('res-ncert').textContent = l.ncert;
       $('res-next').style.display = SB.LEVELS.find(x => x.id === l.id + 1) ? '' : 'none';
       $('res-stars').innerHTML = [1, 2, 3].map(i => `<img src="${A.url(i <= stars ? 'world/pickups/star' : 'world/pickups/star-empty')}" alt="">`).join('');
