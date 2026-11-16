@@ -191,7 +191,7 @@
       b.scale = s.scale = 0.4; gsap.to([b, s], { scale: 1, duration: 0.5, ease: 'back.out(3)' });
       S.tokens.push(b, s); relayout(); S.moves++;
       AU.play('pair');
-      SB.hud.equation(before, '+', net(), 'Added a zero pair: it adds 0', 0, true);
+      SB.hud.equation(before, '+', net(), 'Added a zero pair: (+1) + (−1) = 0', 0, true);
       S.particles.push({ kind: 'img', key: 'fx/zero-pair/zero-ring', x: S.ship.x + 150, y: S.ship.y - 30, w: 90, grow: 0.6, age: 0, life: 0.9, fade: true });
       return true;
     }

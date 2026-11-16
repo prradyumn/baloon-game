@@ -130,8 +130,8 @@
     nudgeHint() { gsap.fromTo('#btn-hint', { scale: 1 }, { scale: 1.18, duration: 0.25, yoyo: true, repeat: 5, ease: 'sine.inOut' }); },
     /** The integer sentence for the last move, e.g. (+2) + (−1) = (+1). opVal is the token value moved. */
     equation(before, op, after, note, opVal, pair) {
-      const rhs = pair ? `${num(1)} + ${num(-1)}` : (opVal === 0 ? '0' : num(opVal));
-      $('eq-line').innerHTML = `${num(before)} <i class="op">${op}</i> ${pair ? '[' + rhs + ']' : rhs} <i class="op">=</i> ${num(after)} <span class="eq-note">${note}</span>`;
+      const rhs = pair || opVal === 0 ? num(0) : num(opVal);
+      $('eq-line').innerHTML = `${num(before)} <i class="op">${op}</i> ${rhs} <i class="op">=</i> ${num(after)} <span class="eq-note">${colorEq(note)}</span>`;
       gsap.fromTo('#eq-line > *', { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, stagger: 0.04, ease: 'back.out(2.5)' });
       HUD.update();
       clearTimeout(S._sayT);
